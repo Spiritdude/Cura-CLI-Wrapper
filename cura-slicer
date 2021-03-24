@@ -136,8 +136,8 @@ if($conf->{version}) {
    $d = $d->{settings};
 
    my $done = {};                      # -- since we walk recursive, keep a cache of already listed settings
-   foreach my $f (sort keys %$d) {
-      list_settings($d->{$f},$done) if(ref($d->{$f}) eq 'HASH');     # -- goes recursive
+   foreach my $k (sort keys %$d) {
+      list_settings($d->{$k},$done) if(ref($d->{$k}) eq 'HASH');     # -- goes recursive
    }
    foreach my $k (sort keys %$done) {
       print $done->{$k};
@@ -255,7 +255,7 @@ sub list_settings {
             $vc = to_json($vc) if(ref($vc));
             $vc =~ s/\n/\\n/g;
             my $v = defined $conf->{$k} ? $vc . " (".(defined $confsrc->{$k} ? $confsrc->{$k} : "cli") .")" : $vc."$xtr (default)";
-            $v .= ", options: ".join(", ",keys %{$d->{$k}->{options}}) if(defined $d->{$k}->{options});
+            $v .= ", options: ".join(", ",sort keys %{$d->{$k}->{options}}) if(defined $d->{$k}->{options});
             $done->{$k} .= "$k = $v\n";
             $done->{$k} .= "\n" if($conf->{verbose});
          }
