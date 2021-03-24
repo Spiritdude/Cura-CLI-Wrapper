@@ -21,7 +21,7 @@ install-defaults::
 	cd settings/; tar cfv - . | (cd ${DEST_SETTINGS}/cura-slicer/; sudo tar xf -)
 
 deinstall::
-	sudo rm -f ${DEST}/cura-slicer ${DEST_SETTINGS}/cura-slicer/
+	sudo rm -rf ${DEST}/cura-slicer ${DEST_SETTINGS}/cura-slicer/
 
 tests::
 	cd tests; make
