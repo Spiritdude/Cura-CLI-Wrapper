@@ -7,7 +7,7 @@ all::
 	@echo "make requirements install install-default install-user-defaults deinstall tests clean edit push pull change backup"
 
 requirements::
-	sudo cpan Time::HiRes
+	sudo cpan Time::HiRes JSON
 	sudo apt -y install cura-engine
 
 install::	install-app install-defaults
