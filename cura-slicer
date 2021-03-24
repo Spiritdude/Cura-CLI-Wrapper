@@ -80,9 +80,11 @@ for(my $i=0; $i<@ARGV; $i++) {                        # -- preprocess all comman
                push(@slicer_args_cli,"-s","$k=$c->{$k}");
             }
          } else {
+            $v =~ s/\\n/\n/g;
             $conf->{$k_} = $v;
          }
       } else {
+         $v =~ s/\\n/\n/g;
          $conf->{$k_} = $v;
          push(@slicer_args_cli,("-s","$k_=$v"));      #    if not push it on the argument list for CuraEngine
       }
@@ -228,7 +230,7 @@ sub parseConfig {
    while(<$fh>) {
       chop;
       next if(/^\s*#/);
-      $k = $1, $v = $2, $k =~ s/\-/_/g, $c->{$k} = $v, $confsrc->{$k} = "config $fn" if(/([\w\-]+)\s*=\s*(.*)/);
+      $k = $1, $v = $2, $k =~ s/\-/_/g, $v =~ s/\\n/\n/g, $c->{$k} = $v, $confsrc->{$k} = "config $fn" if(/([\w\-]+)\s*=\s*(.*)/);
    }
    close $fh;
    return $c;
