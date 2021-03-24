@@ -1,5 +1,5 @@
 APPNAME = Cura-CLI-Wrapper
-VERSION = 0.0.5
+VERSION = 0.0.6
 DEST = /usr/local/bin
 DEST_SETTINGS = /usr/share
 

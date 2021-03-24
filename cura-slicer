@@ -238,10 +238,7 @@ sub list_settings {
    my($d,$done) = @_;
 
    foreach my $k (sort keys %$d) {
-      if($k eq 'children') {
-         list_settings($d->{$k},$done);
-
-      } elsif(ref($d->{$k}) eq 'HASH') {
+      if(ref($d->{$k}) eq 'HASH') {
          my $h = 1;
          if(@fs>0) {       # -- any term listed? try to match it
             $h = 0;
@@ -256,6 +253,7 @@ sub list_settings {
             my $xtr = $d->{$k}->{unit} ? " [$d->{$k}->{unit}]" : "";
             my $vc = defined $conf->{$k} ? $conf->{$k} : $d->{$k}->{default_value};
             $vc = to_json($vc) if(ref($vc));
+            $vc =~ s/\n/\\n/g;
             my $v = defined $conf->{$k} ? $vc . " (".(defined $confsrc->{$k} ? $confsrc->{$k} : "cli") .")" : $vc."$xtr (default)";
             $v .= ", options: ".join(", ",keys %{$d->{$k}->{options}}) if(defined $d->{$k}->{options});
             $done->{$k} .= "$k = $v\n";
