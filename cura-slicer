@@ -1,18 +1,20 @@
 #!/usr/bin/perl
 
-# == Cura Slicer (CLI), small wrapper for CuraEngine
+# == Cura Slicer (CLI), small command-line wrapper for CuraEngine
 #    written by Rene K. Mueller <spiritdude@gmail.com>
 #
-# Copyright: (see COPYRIGHT file)
+# Copyright 2021 by Rene K. Mueller
+#
 # License: LGPLv3 (see LICENSE file)
 #
 # Description:
-#   It provides simple wrapper around CuraEngine itself
+#   It provides simple wrapper around CuraEngine itself with the ability to query all possible settings
 #
 #   For technical details see at 
 #        https://github.com/Spiritdude/Cura-CLI-Wrapper
 #
 # History:
+# 2021/03/24: 0.0.5: properly track source of settings with $confsrc->{key}
 # 2021/03/24: 0.0.4: --load <config> support added
 # 2021/03/23: 0.0.2: --help gives all settings, or --help <term> queries matches, -v and -vv (2 levels of verbosity), 
 # 2021/03/23: 0.0.1: just a small script to ease the CuraEngine usage
@@ -23,7 +25,7 @@ use JSON;
 
 my $APPNAME = 'Cura-Slicer';
 my $GITHUB_NAME = 'Cura-CLI-Wrapper';
-my $VERSION = '0.0.4';
+my $VERSION = '0.0.5';
 
 my($app) = ($0=~/\/([^\/]+)$/);
 
@@ -33,6 +35,8 @@ my $conf = {
    binary_version => '???',
    definition => "/usr/share/$app/fdmprinter.def.json"
 };
+
+my $confsrc;      # -- store source of a configuration setting (cli, default of config file)
 
 my %sf2l = ( 'v' => 'verbose', 'h' => 'help', 'o' => 'output', 'l' => 'load' );  # -- short flag to long option
 my %sf2la = ( 'o' => 1 );                                                        # -- shoft flag additional arg
@@ -49,7 +53,7 @@ if(!-e $conf->{definition}) {
 foreach my $p ("/usr/share/$app","$ENV{HOME}/.config/$app") {
    my $c = parseConfig($p."/base.ini");
    foreach my $k (keys %$c) {
-      $conf->{"_".$k} = $c->{$k};                     # -- assist in --help to determine origin of value
+      $conf->{$k} = $c->{$k};
       push(@slicer_args,'-s',"$k=$c->{$k}");
    }
 }
@@ -70,7 +74,7 @@ for(my $i=0; $i<@ARGV; $i++) {                        # -- preprocess all comman
          if($k eq 'load') {                           # -- treat '--load=<conf>' specially
             my $c = parseConfig($v);
             foreach my $k (sort keys %$c) {
-               $conf->{"_$k"} = $c->{$k};
+               $conf->{$k} = $c->{$k};
                push(@slicer_args_cli,"-s","$k=$c->{$k}");
             }
          } else {
@@ -87,7 +91,7 @@ for(my $i=0; $i<@ARGV; $i++) {                        # -- preprocess all comman
          if($k eq 'load') {                           # -- treat '--load' <conf> specially
             my $c = parseConfig($ARGV[++$i]);
             foreach my $k (sort keys %$c) {
-               $conf->{"_$k"} = $c->{$k};
+               $conf->{$k} = $c->{$k};
                push(@slicer_args_cli,"-s","$k=$c->{$k}");
             }
          } else {
@@ -110,12 +114,12 @@ for(my $i=0; $i<@ARGV; $i++) {                        # -- preprocess all comman
    }
 }
 
-# print to_json($conf,{canonical=>1}),"\n";;
+print to_json($conf,{pretty=>1,canonical=>1}),"\n" if($conf->{verbose}>2);
 
 $conf->{binary_version} = $1 if(`$conf->{binary} 2>&1`=~/Cura.+version\s+([\d\.]+)/);     # -- crude way to retrieve version
 
 if($conf->{version}) {
-   print "$APPNAME $VERSION ($conf->{binary} $conf->{binary_version})\n";
+   print "$APPNAME $VERSION aka $GITHUB_NAME ($conf->{binary} $conf->{binary_version})\n";
    exit 0;
 
 } elsif($conf->{help}) {
@@ -145,6 +149,7 @@ if($conf->{help} || @fs <= 0) {
    print "USAGE $APPNAME $VERSION aka $GITHUB_NAME ($conf->{binary} $conf->{binary_version}): [<opts>] <file.stl> ...
    options:
       -v or --verbose         increase verbosity
+      -vv or --verbose=2          \"       \"
       --version               display version and exit
       --load=<config>         load config file
       --load <config>           \"         \"
@@ -158,6 +163,7 @@ if($conf->{help} || @fs <= 0) {
    examples:
       $app --help
       $app --help retract
+      $app -hv retract 
       $app sphere.stl
       $app overhang.stl --output=sample.gcode
       $app overhang.stl --layer-height=0.1 --support-enable=true -o sample.gcode
@@ -220,7 +226,7 @@ sub parseConfig {
    while(<$fh>) {
       chop;
       next if(/^\s*#/);
-      $k = $1, $v = $2, $k =~ s/\-/_/g, $c->{$k} = $v if(/([\w\-]+)\s*=\s*(.*)/);
+      $k = $1, $v = $2, $k =~ s/\-/_/g, $c->{$k} = $v, $confsrc->{$k} = "config $fn" if(/([\w\-]+)\s*=\s*(.*)/);
    }
    close $fh;
    return $c;
@@ -246,8 +252,9 @@ sub list_settings {
             $done->{$k} .= "== $k ($d->{$k}->{label}) ==\n   $d->{$k}->{description}\n" if($conf->{verbose});
             $done->{$k} .= "   " if($conf->{verbose});
             my $xtr = $d->{$k}->{unit} ? " [$d->{$k}->{unit}]" : "";
-            my $v = defined $conf->{$k} ? $conf->{$k}."$xtr (cli)" : defined $conf->{"_$k"} ? $conf->{"_$k"}."$xtr (config)" : $d->{$k}->{default_value}."$xtr (default)";
-            $v = to_json($v) if(ref($v));
+            my $vc = defined $conf->{$k} ? $conf->{$k} : $d->{$k}->{default_value};
+            $vc = to_json($vc) if(ref($vc));
+            my $v = defined $conf->{$k} ? $vc . " (".(defined $confsrc->{$k} ? $confsrc->{$k} : "cli") .")" : $vc."$xtr (default)";
             $v .= ", options: ".join(", ",keys %{$d->{$k}->{options}}) if(defined $d->{$k}->{options});
             $done->{$k} .= "$k = $v\n";
             $done->{$k} .= "\n" if($conf->{verbose});
