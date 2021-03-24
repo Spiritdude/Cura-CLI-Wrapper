@@ -32,7 +32,7 @@ clean::
 # -- dev only
 
 edit::
-	dee4 cura-slicer Makefile README.md COPYRIGHT LICENSE settings/*.ini tests/Makefile
+	dee4 cura-slicer Makefile README.md LICENSE settings/*.ini tests/Makefile
 
 push::
 	git push -u origin master

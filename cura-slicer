@@ -12,6 +12,8 @@
 #
 #   For technical details see at 
 #        https://github.com/Spiritdude/Cura-CLI-Wrapper
+#     and
+#        https://xyzdims.com/3d-printing/cura-cli-wrapper/
 #
 # History:
 # 2021/03/24: 0.0.5: properly track source of settings with $confsrc->{key}
