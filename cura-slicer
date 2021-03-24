@@ -27,7 +27,7 @@ use JSON;
 
 my $APPNAME = 'Cura-Slicer';
 my $GITHUB_NAME = 'Cura-CLI-Wrapper';
-my $VERSION = '0.0.5';
+my $VERSION = '0.0.6';
 
 my($app) = ($0=~/\/([^\/]+)$/);
 
