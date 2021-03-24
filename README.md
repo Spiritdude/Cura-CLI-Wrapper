@@ -4,7 +4,7 @@ This is a small wrapper providing an easy to use CuraEngine:
 - alike usage as `slic3r` or `prusa-slicer`
 - query hundreds of settings with `cura-slicer` direct with `-h` switch or `--help`
 
-See [Cura CLI Wrapper (cura-slicer)]() for details.
+See [Cura CLI Wrapper (cura-slicer)](https://xyzdims.com/2021/03/24/3d-printing-cura-cli-wrapper-cura-slicer/) for details.
 
 # Supported Platforms
 - Linux Ubuntu/Debian, tested with Ubuntu 20.04 LTS
