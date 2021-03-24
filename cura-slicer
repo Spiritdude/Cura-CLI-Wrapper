@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# == Cura Slicer (CLI), small command-line wrapper for CuraEngine
+# == Cura-Slicer (CLI) aka Cura-CLI-Wrapper, small command-line wrapper for CuraEngine
 #    written by Rene K. Mueller <spiritdude@gmail.com>
 #
 # Copyright 2021 by Rene K. Mueller
@@ -205,7 +205,7 @@ foreach my $fn (@fs) {
    if(!-e $fout || (stat($fout))[7]==0) {    # -- CuraEngine creates also zero-byte .gcode output in case of error
       unlink $fout;     # -- if it's zero byte, then remove it 
       print "$app ERROR: $app ($conf->{binary}) did not generate any gcode, abort.\n";
-      print "$app HINT: execute with -vv to see the actual problem\n" unless($conf->{verbose});
+      print "$app HINT: execute with -vv to see the actual problem\n" unless($conf->{verbose}>1);
       exit -1;
    }
    $t = time()-$t;
