@@ -23,16 +23,18 @@ See [Cura CLI Wrapper (cura-slicer)](https://xyzdims.com/2021/03/24/3d-printing-
 
 # Usage
 ```
-USAGE Cura-Slicer 0.0.5 aka Cura-CLI-Wrapper (CuraEngine 4.4.1): [<opts>] <file.stl> ...
+USAGE Cura-Slicer 0.0.7 aka Cura-CLI-Wrapper (CuraEngine 4.4.1): [<opts>] <file.stl> ...
    options:
       -v or --verbose         increase verbosity
       -vv or --verbose=2          "       "
-      --version               display version and exit
+      --version               display version of this program and exit
       --load=<config>         load config file
       --load <config>           "         "
       --output=<fn>           set output filename
       --output <fn>             "         "
       -o <fn>                   "         "
+      --binary=<exe>          set executable of CuraEngine (default: CuraEngine)
+      --version=<v>           set version of CuraEngine (default: 4)
       --<k>=<v>               set CuraEngine settings (keys with '-' will be converted to '_')
       -h or --help            display all settings
       -h or --help <term> ..  display settings matching term
