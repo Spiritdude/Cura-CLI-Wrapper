@@ -16,6 +16,7 @@
 #        https://xyzdims.com/2021/03/24/3d-printing-cura-cli-wrapper-cura-slicer/
 #
 # History:
+# 2021/05/01: 0.0.7: set executable & version (support v3, v4 of CuraEngine)
 # 2021/03/24: 0.0.5: properly track source of settings with $confsrc->{key}
 # 2021/03/24: 0.0.4: --load <config> support added
 # 2021/03/23: 0.0.2: --help gives all settings, or --help <term> queries matches, -v and -vv (2 levels of verbosity), 
@@ -27,7 +28,7 @@ use JSON;
 
 my $APPNAME = 'Cura-Slicer';
 my $GITHUB_NAME = 'Cura-CLI-Wrapper';
-my $VERSION = '0.0.6';
+my $VERSION = '0.0.7';
 
 my($app) = ($0=~/\/([^\/]+)$/);
 
@@ -35,6 +36,7 @@ my $conf = {
    verbose => 0,
    binary => "CuraEngine",
    binary_version => '???',
+   version => 4,
    definition => "/usr/share/$app/fdmprinter.def.json"
 };
 
@@ -102,7 +104,7 @@ for(my $i=0; $i<@ARGV; $i++) {                        # -- preprocess all comman
             $conf->{$k} = $ARGV[++$i];
          }
       } else {
-         $conf->{$k}++;
+         $conf->{$k} = 1;
       }
 
    } elsif(/^-(\w+)$/) {                              # -- single character switch extended
@@ -122,7 +124,7 @@ print to_json($conf,{pretty=>1,canonical=>1}),"\n" if($conf->{verbose}>2);
 
 $conf->{binary_version} = $1 if(`$conf->{binary} 2>&1`=~/Cura.+version\s+([\d\.]+)/);     # -- crude way to retrieve version
 
-if($conf->{version}) {
+if($conf->{version}==1) {
    print "$APPNAME $VERSION aka $GITHUB_NAME ($conf->{binary} $conf->{binary_version})\n";
    exit 0;
 
@@ -154,12 +156,14 @@ if($conf->{help} || @fs <= 0) {
    options:
       -v or --verbose         increase verbosity
       -vv or --verbose=2          \"       \"
-      --version               display version and exit
+      --version               display version of this program and exit
       --load=<config>         load config file
       --load <config>           \"         \"
       --output=<fn>           set output filename
       --output <fn>             \"         \"
       -o <fn>                   \"         \"
+      --binary=<exe>          set executable of CuraEngine (default: $conf->{binary})
+      --version=<v>           set version of CuraEngine (default: $conf->{version})
       --<k>=<v>               set CuraEngine settings (keys with '-' will be converted to '_')
       -h or --help            display all settings
       -h or --help <term> ..  display settings matching term
@@ -194,9 +198,15 @@ foreach my $fn (@fs) {
    print "processing $fn, slicing to $fout\n";
    if(fork()==0) {
       my(@a) = ($conf->{binary});
-      push(@a,"slice","-j",$conf->{definition},@slicer_args);
-      push(@a,"-l",$fn);
-      push(@a,"-o",$fout);
+      if($conf->{version}==3) {
+         push(@a,@slicer_args);
+         push(@a,"-o",$fout);
+         push(@a,$fn);
+      } else {
+         push(@a,"slice","-j",$conf->{definition},@slicer_args);
+         push(@a,"-l",$fn);
+         push(@a,"-o",$fout);
+      }
       print "$app INF: @a\n" if($conf->{verbose});
       # -- is important, as CuraEngine is chatty and closing only STDERR will pollute the resulting G-code with error messages(!!)
       close STDERR, close STDOUT if($conf->{verbose}<2);      
